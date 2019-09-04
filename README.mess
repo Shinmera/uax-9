@@ -1,0 +1,12 @@
+## Don't look AAAAAAAAAAAAAAAa
+
+## External Files
+The following files were retrieved from external resources, last accessed on 4.9.2019.
+
+- ``BidiBrackets.txt`` https://www.unicode.org/Public/UCD/latest/ucd/BidiBrackets.txt
+- ``BidiCharacterTest.txt`` https://www.unicode.org/Public/UCD/latest/ucd/BidiCharacterTest.txt
+- ``BidiMirroring.txt`` https://www.unicode.org/Public/UCD/latest/ucd/BidiMirroring.txt
+- ``BidiTest.txt`` https://www.unicode.org/Public/UCD/latest/ucd/BidiTest.txt
+- ``DerivedBidiClass.txt`` https://www.unicode.org/Public/UCD/latest/ucd/DerivedBidiClass.txt
+
+At the time, Unicode 12.1 was considered the latest version.
