@@ -8,7 +8,8 @@
   (:use #:cl)
   (:local-nicknames
    (#:uax-9 #:org.shirakumo.alloy.uax-9))
-  (:export))
+  (:export
+   #:compile-databases))
 
 (in-package #:org.shirakumo.alloy.uax-9.compiler)
 
@@ -43,20 +44,20 @@
     target))
 
 (defun write-u32le (int stream)
-  (write-byte (ldb (byte 8 0)) stream)
-  (write-byte (ldb (byte 8 8)) stream)
-  (write-byte (ldb (byte 8 16)) stream)
-  (write-byte (ldb (byte 8 24)) stream))
+  (write-byte (ldb (byte 8 0) int) stream)
+  (write-byte (ldb (byte 8 8) int) stream)
+  (write-byte (ldb (byte 8 16) int) stream)
+  (write-byte (ldb (byte 8 24) int) stream))
 
 (defun set-bracket-pair (data line)
-  (let ((from (position #\; line))
-        (to (position #\; line :start (1+ from))))
+  (let* ((from (position #\; line))
+         (to (position #\; line :start (1+ from))))
     (let ((from (parse-integer line :end from :radix 16))
           (to (parse-integer line :start (+ from 2) :end to :radix 16))
-          (type (case (char line (+ to 2))
+          (type (ecase (char line (+ to 2))
                   (#\o 0)
-                  (#\c 1)))))
-    (setf (gethash from data) (logior to (ash type 25)))))
+                  (#\c 1))))
+      (setf (gethash from data) (logior to (ash type 25))))))
 
 (defun compile-bidi-brackets-table (&key (source (make-pathname :name "BidiBrackets" :type "txt" :defaults uax-9::*here*))
                                          (target uax-9:*bidi-brackets-table-file*))
@@ -74,6 +75,7 @@
                             :direction :output
                             :element-type '(unsigned-byte 8)
                             :if-exists :supersede)
+      (write-u32le (hash-table-count data) stream)
       (loop for key being the hash-keys of data
             for val being the hash-values of data
             do (write-u32le key stream)
@@ -103,6 +105,7 @@
                             :direction :output
                             :element-type '(unsigned-byte 8)
                             :if-exists :supersede)
+      (write-u32le (hash-table-count data) stream)
       (loop for key being the hash-keys of data
             for val being the hash-values of data
             do (write-u32le key stream)

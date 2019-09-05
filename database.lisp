@@ -20,7 +20,7 @@
 (deftype code ()
   '(integer 0 #x10FFFF))
 
-(defun read-u32le (int stream)
+(defun read-u32le (stream)
   (logior
    (ash (read-byte stream) 0)
    (ash (read-byte stream) 8)
@@ -70,7 +70,7 @@
       `(load-time-value (position ,class +bidi-class-list+))
       whole))
 
-(declaim (type (simple-array (unsigned-byte 8) (#x110000) +bidi-class-map+)))
+(declaim (type (simple-array (unsigned-byte 8) (#x110000)) +bidi-class-map+))
 (defglobal +bidi-class-map+ (make-array #x110000 :element-type '(unsigned-byte 8) :initial-element 0))
 
 (defun load-bidi-class-database (&optional (source *bidi-class-database-file*))
@@ -87,23 +87,26 @@
   (aref +bidi-class-map+ id))
 
 (declaim (type hash-table +bidi-brackets-map+))
-(defglobal +bidi-brackets-map+ (make-hash-table :test 'eq :size 75))
+(defglobal +bidi-brackets-map+ (make-hash-table :test 'eq :size 120))
 
 (defun load-bidi-brackets-table (&optional (source *bidi-brackets-table-file*))
   (clrhash +bidi-brackets-map+)
   (with-open-file (stream source
                           :direction :input
                           :element-type '(unsigned-byte 8))
-    (loop for key = (read-u32le stream)
+    (loop repeat (read-u32le stream)
+          for key = (read-u32le stream)
           for val = (read-u32le stream)
           do (setf (gethash key +bidi-brackets-map+) val))
     +bidi-brackets-map+))
 
 (declaim (inline bracket-sibling))
 (defun bracket-sibling (id)
-  (let ((sibling (the (unsigned-byte 32) (gethash id +bidi-brackets-map+ 0))))
-    (values (logand sibling #xFFFFFF)
-            (ash sibling -25))))
+  (logand (the (unsigned-byte 32) (gethash id +bidi-brackets-map+ 0)) #xFFFFFF))
+
+(declaim (inline bracket-type))
+(defun bracket-type (id)
+  (ash (the (unsigned-byte 32) (gethash id +bidi-brackets-map+ 0)) -25))
 
 (declaim (type hash-table +bidi-mirroring-map+))
 (defglobal +bidi-mirroring-map+ (make-hash-table :test 'eq :size 420))
@@ -113,7 +116,8 @@
   (with-open-file (stream source
                           :direction :input
                           :element-type '(unsigned-byte 8))
-    (loop for key = (read-u32le stream)
+    (loop repeat (read-u32le stream)
+          for key = (read-u32le stream)
           for val = (read-u32le stream)
           do (setf (gethash key +bidi-mirroring-map+) val))
     +bidi-mirroring-map+))
