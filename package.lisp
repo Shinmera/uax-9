@@ -6,4 +6,9 @@
 
 (defpackage #:org.shirakumo.alloy.uax-9
   (:use #:cl)
-  (:export))
+  (:export
+   #:*bidi-class-database-file*
+   #:*bidi-brackets-table-file*
+   #:*bidi-mirroring-table-file*
+   #:load-databases
+   #:compile-databases))
