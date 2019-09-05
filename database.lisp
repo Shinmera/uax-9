@@ -1,5 +1,5 @@
 #|
-  This file is a part of UAX-9
+ This file is a part of UAX-9
  (c) 2019 Shirakumo http://tymoon.eu (shinmera@tymoon.eu)
  Author: Nicolas Hafner <shinmera@tymoon.eu>
 |#
@@ -19,6 +19,9 @@
 
 (deftype code ()
   '(integer 0 #x10FFFF))
+
+(deftype level ()
+  '(integer 0 125))
 
 (defun read-u32le (stream)
   (logior

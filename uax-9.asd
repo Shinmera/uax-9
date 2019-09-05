@@ -16,6 +16,8 @@
   :serial T
   :components ((:file "package")
                (:file "database")
+               (:file "status-stack")
+               (:file "isolating-run-sequence")
                (:file "uax-9")
                (:file "documentation"))
   :depends-on (:documentation-utils)
