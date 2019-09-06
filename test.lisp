@@ -6,11 +6,24 @@
 
 (defpackage #:org.shirakumo.alloy.uax-9.test
   (:use #:cl #:parachute)
+  (:shadow #:test)
   (:local-nicknames
    (#:uax-9 #:org.shirakumo.alloy.uax-9))
-  (:export #:uax-9))
+  (:export #:test #:uax-9))
 
 (in-package #:org.shirakumo.alloy.uax-9.test)
+
+(defun test ()
+  (let* ((report (parachute:test 'uax-9 :report 'quiet))
+         (total (length (results report)))
+         (passed (length (results-with-status :passed report)))
+         (failed (length (results-with-status :failed report))))
+    (format T "~&
+Total:  ~6d
+Passed: ~6d (~2d%)
+Failed: ~6d (~2d%)~%"
+            total passed (round (/ passed total 1/100))
+            failed (round (/ failed total 1/100)))))
 
 (define-test uax-9)
 
@@ -54,17 +67,21 @@
                           :element-type 'character
                           :external-format :utf-8)
     (loop with levels and reorder
+          for i from 0
           for line = (read-line stream NIL)
           while line
           do (when (and (string/= "" line) (char/= #\# (char line 0)))
                (cond ((prefix-p "@Levels:" line)
-                      (setf levels (loop for part in (split #\  line :start (length "@Levels:"))
-                                         collect (if (string-equal part "x")
-                                                     T
-                                                     (parse-integer part)))))
+                      (setf levels (map 'vector (lambda (part)
+                                                  (if (string-equal part "x")
+                                                      T
+                                                      (parse-integer part)))
+                                        (split #\  line :start (length "@Levels: ")))))
                      ((prefix-p "@Reorder:" line)
-                      (setf reorder (loop for part in (split #\  line :start (length "@Reorder:"))
-                                          collect (parse-integer part))))
+                      (setf reorder (coerce (loop with parts = (split #\  line :start (length "@Reorder: "))
+                                                  for level across levels
+                                                  collect (if (eql T level) T (parse-integer (pop parts))))
+                                            'vector)))
                      ((prefix-p "@" line))
                      (T
                       (destructuring-bind (input bitset) (split #\; line)
@@ -73,15 +90,21 @@
                                             collect (find-symbol part "KEYWORD")))
                                (string (string-for-bidi-classes types)))
                           (flet ((test (level)
-                                   (let* ((result-levels (finish (uax-9::run-algorithm string level)))
+                                   (let* ((result-levels (eval-in-context
+                                                          *context*
+                                                          (make-instance 'finishing-result
+                                                                         :expression `(finish (uax-9::run-algorithm ,types ,level))
+                                                                         :body (lambda () (uax-9::run-algorithm string level)))))
                                           (%levels (is level= levels (uax-9::levels string level result-levels))))
-                                     (is equal reorder (uax-9::reorder %levels)))))
+                                     (is level= reorder (uax-9::reorder %levels)))))
                             (when (logtest 1 bitset)
                               (test 0))
                             (when (logtest 2 bitset)
                               (test 2))
                             (when (logtest 4 bitset)
-                              (test 3)))))))))))
+                              (test 3))))))))
+             (when (= 0 (mod i 100000))
+               (format T "~& ~6d lines processed." i)))))
 
 (define-test bidi-character-test
   :parent uax-9)

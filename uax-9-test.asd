@@ -16,4 +16,4 @@
   :serial T
   :components ((:file "test"))
   :depends-on (:uax-9 :parachute :cl-ppcre)
-  :perform (asdf:test-op (op c) (uiop:symbol-call :parachute :test :org.shirakumo.alloy.uax-9.test)))
+  :perform (asdf:test-op (op c) (uiop:symbol-call :org.shirakumo.alloy.uax-9.test :test)))
