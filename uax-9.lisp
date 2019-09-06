@@ -22,11 +22,6 @@
                          (not (eql class (class-id :AN)))
                          (not (<= (class-id :LRE) class (class-id :PDI))))))))
 
-(defun whitespace-p (id)
-  (or (= id (class-id :BN))
-      (= id (class-id :WS))
-      (<= (class-id :LRE) id (class-id :PDI))))
-
 (defun make-class-array (string)
   (let ((array (make-array (length string) :element-type '(unsigned-byte 8))))
     (dotimes (i (length string))
@@ -147,14 +142,10 @@
                       (setf (aref result-types i) (last-override stack))))))
     (values result-types result-levels)))
 
-(defun removed-by-x9-p (class)
-  (or (= class (class-id :BN))
-      (<= (class-id :LRE) class (class-id :PDF))))
-
 (defun determine-level-runs (string result-levels)
   ;; FIXME: this seems very inefficient?
   (let ((temp (make-array (length string) :element-type 'idx))
-        (runs (make-array 128 :adjustable T :fill-pointer T))
+        (runs (make-array 128 :adjustable T :fill-pointer 0))
         (level -1)
         (length 0))
     (loop for i from 0 below (length string)
@@ -171,10 +162,10 @@
       (vector-push-extend (subseq temp 0 length) runs))
     runs))
 
-(defun determine-isolating-run-sequences (string result-levels matching-pdis matching-initiator)
+(defun determine-isolating-run-sequences (string level result-types result-levels matching-pdis matching-initiator)
   (let* ((level-runs (determine-level-runs string result-levels))
          (run-for-char (make-array (length string) :element-type 'idx))
-         (sequences (make-array (length level-runs) :fill-pointer T))
+         (sequences (make-array (length level-runs) :fill-pointer 0))
          (current (make-array (length string) :element-type 'idx)))
     (loop for run across level-runs
           for run-i from 0
@@ -200,7 +191,7 @@
                                    (/= (length string) (aref matching-pdis last-char)))
                               (setf run (aref run-for-char (aref matching-pdis last-char)))
                               (loop-finish))))
-               (vector-push (make-isolating-run-sequence current) sequences)))
+               (vector-push (make-isolating-run-sequence current string level result-types result-levels) sequences)))
     sequences))
 
 (defun assign-levels-to-characters-removed-by-x9 (string level result-types result-levels)
@@ -221,7 +212,7 @@
       (when (= 2 level)
         (setf level (determine-paragraph-embedding-level classes matching-pdis 0 (length classes))))
       (multiple-value-bind (result-levels result-types) (determine-explicit-embedding-levels level classes matching-pdis)
-        (let ((sequences (determine-isolating-run-sequences string result-levels matching-pdis matching-initiator)))
+        (let ((sequences (determine-isolating-run-sequences string level result-types result-levels matching-pdis matching-initiator)))
           (loop for sequence across sequences
                 do (resolve-weak-types sequence)
                    (resolve-paired-brackets sequence)

@@ -81,6 +81,17 @@
       `(load-time-value (list ,@(loop for class in classes collect `(class-id ,class))))
       whole))
 
+(declaim (inline whitespace-p))
+(defun whitespace-p (class)
+  (or (= class (class-id :BN))
+      (= class (class-id :WS))
+      (<= (class-id :LRE) class (class-id :PDI))))
+
+(declaim (inline removed-by-x9-p))
+(defun removed-by-x9-p (class)
+  (or (= class (class-id :BN))
+      (<= (class-id :LRE) class (class-id :PDF))))
+
 (declaim (type (simple-array (unsigned-byte 8) (#x110000)) +bidi-class-map+))
 (defglobal +bidi-class-map+ (make-array #x110000 :element-type '(unsigned-byte 8) :initial-element 0))
 

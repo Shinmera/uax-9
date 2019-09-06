@@ -9,7 +9,7 @@
 (defconstant MAX-DEPTH 125)
 
 (defstruct (status-stack (:constructor make-status-stack ()))
-  (stack (make-array (+ 1 MAX-DEPTH) :element-type '(unsigned-byte 32)) :type (simple-array (unsigned-byte 32) (128)))
+  (stack (make-array (+ 1 MAX-DEPTH) :element-type '(unsigned-byte 32)) :type (simple-array (unsigned-byte 32) (126)))
   (last -1 :type (signed-byte 8)))
 
 (defun push-status (level override isolate stack)
