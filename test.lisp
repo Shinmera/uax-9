@@ -13,8 +13,8 @@
 
 (in-package #:org.shirakumo.alloy.uax-9.test)
 
-(defun test ()
-  (let* ((report (parachute:test 'uax-9 :report 'quiet))
+(defun test (&optional (type 'quiet))
+  (let* ((report (parachute:test 'uax-9 :report type))
          (total (length (results report)))
          (passed (length (results-with-status :passed report)))
          (failed (length (results-with-status :failed report))))
@@ -67,7 +67,7 @@ Failed: ~9,,'':d (~2d%)~%"
                           :element-type 'character
                           :external-format :utf-8)
     (loop with levels and reorder
-          for i from 0
+          for i from 1
           for line = (read-line stream NIL)
           while line
           do (when (and (string/= "" line) (char/= #\# (char line 0)))
@@ -90,19 +90,27 @@ Failed: ~9,,'':d (~2d%)~%"
                                             collect (find-symbol part "KEYWORD")))
                                (string (string-for-bidi-classes types)))
                           (flet ((test (level)
-                                   (let* ((result-levels (eval-in-context
-                                                          *context*
-                                                          (make-instance 'finishing-result
-                                                                         :expression `(finish (uax-9::run-algorithm ,types ,level))
-                                                                         :body (lambda () (uax-9::run-algorithm string level)))))
-                                          (%levels (is level= levels (uax-9::levels string level result-levels))))
-                                     (is level= reorder (uax-9::reorder %levels)))))
-                            (when (logtest 1 bitset)
-                              (test 0))
-                            (when (logtest 2 bitset)
-                              (test 2))
-                            (when (logtest 4 bitset)
-                              (test 3))))))))
+                                   (multiple-value-bind (result-levels level)
+                                       (eval-in-context
+                                        *context*
+                                        (make-instance 'finishing-result
+                                                       :expression `(finish (uax-9::run-algorithm ,types ,level))
+                                                       :body (lambda () (uax-9::run-algorithm string level))))
+                                     (let ((%levels
+                                             (eval-in-context
+                                              *context*
+                                              (make-instance 'comparison-result
+                                                             :expression `(is level= ,levels (uax-9::levels ,string ,level ,result-levels))
+                                                             :value-form `(uax-9::levels ,types ,level ,result-levels)
+                                                             :expected levels
+                                                             :body (lambda () (uax-9::levels string level result-levels))
+                                                             :comparison 'level=
+                                                             :description (format NIL "#~d" i)))))
+                                       ;;(is level= reorder (uax-9::reorder %levels))
+                                       ))))
+                            (when (logtest 1 bitset) (test 2))
+                            (when (logtest 2 bitset) (test 0))
+                            (when (logtest 4 bitset) (test 1))))))))
              (when (= 0 (mod i 100000))
                (format T "~& ~8,,'':d lines processed." i)))))
 

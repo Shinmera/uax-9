@@ -218,7 +218,7 @@
                    (resolve-implicit-levels sequence)
                    (apply-levels-and-types sequence result-types result-levels))
           (assign-levels-to-characters-removed-by-x9 string level result-types result-levels)
-          result-levels)))))
+          (values result-levels level))))))
 
 (defun levels (string level result-levels &optional line-breaks)
   ;; FIXME: turn this into call-with-* style that does not allocate anything and instead
@@ -234,7 +234,7 @@
                             (setf (aref results j) level)
                             (loop-finish)))))
     (loop with start = 0
-          for limit in line-breaks
+          for limit in (or line-breaks (list (length string)))
           do (loop for j downfrom (1- limit) above start
                    do (if (whitespace-p (class-at string j))
                           (setf (aref results j) level)
