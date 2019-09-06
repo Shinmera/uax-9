@@ -19,9 +19,9 @@
          (passed (length (results-with-status :passed report)))
          (failed (length (results-with-status :failed report))))
     (format T "~&
-Total:  ~6d
-Passed: ~6d (~2d%)
-Failed: ~6d (~2d%)~%"
+Total:  ~9,,'':d
+Passed: ~9,,'':d (~2d%)
+Failed: ~9,,'':d (~2d%)~%"
             total passed (round (/ passed total 1/100))
             failed (round (/ failed total 1/100)))))
 
@@ -104,7 +104,7 @@ Failed: ~6d (~2d%)~%"
                             (when (logtest 4 bitset)
                               (test 3))))))))
              (when (= 0 (mod i 100000))
-               (format T "~& ~6d lines processed." i)))))
+               (format T "~& ~8,,'':d lines processed." i)))))
 
 (define-test bidi-character-test
   :parent uax-9)
