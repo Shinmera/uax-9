@@ -73,6 +73,14 @@
       `(load-time-value (position ,class +bidi-class-list+))
       whole))
 
+(defun class-ids (&rest classes)
+  (mapcar #'class-id classes))
+
+(define-compiler-macro class-ids (&whole whole &rest classes &environment env)
+  (if (loop for class in classes always (constantp class env))
+      `(load-time-value (list ,@(loop for class in classes collect `(class-id ,class))))
+      whole))
+
 (declaim (type (simple-array (unsigned-byte 8) (#x110000)) +bidi-class-map+))
 (defglobal +bidi-class-map+ (make-array #x110000 :element-type '(unsigned-byte 8) :initial-element 0))
 
