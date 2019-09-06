@@ -99,11 +99,11 @@
                                  (incf valid-isolates))
                                (push-status new-level
                                             (cond ((= class (class-id :LRO))
-                                                   :L)
+                                                   (class-id :L))
                                                   ((= class (class-id :RLO))
-                                                   :R)
+                                                   (class-id :R))
                                                   (T
-                                                   :ON))
+                                                   (class-id :ON)))
                                             isolate-p
                                             stack)
                                (unless isolate-p
@@ -195,15 +195,13 @@
     sequences))
 
 (defun assign-levels-to-characters-removed-by-x9 (string level result-types result-levels)
-  (loop for i from 0 below (length string)
+  (when (removed-by-x9-p (class-at string 0))
+    (setf (aref result-types 0) (class-at string 0))
+    (setf (aref result-levels 0) level))
+  (loop for i from 1 below (length string)
         for class = (class-at string i)
         do (when (removed-by-x9-p class)
              (setf (aref result-types i) class)
-             (setf (aref result-levels i) -1)))
-  (when (= -1 (aref result-levels 0))
-    (setf (aref result-levels 0) level))
-  (loop for i from 1 below (length string)
-        do (when (= -1 (aref result-levels i))
              (setf (aref result-levels i) (aref result-levels (1- i))))))
 
 (defun run-algorithm (string &optional (level 2))
