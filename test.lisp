@@ -106,8 +106,15 @@ Failed: ~9,,'':d (~2d%)~%"
                                                              :body (lambda () (uax-9::levels string level result-levels))
                                                              :comparison 'level=
                                                              :description (format NIL "#~d" i)))))
-                                       ;;(is level= reorder (uax-9::reorder %levels))
-                                       ))))
+                                       (eval-in-context
+                                        *context*
+                                        (make-instance 'comparison-result
+                                                       :expression `(is level= ,reorder (uax-9::reorder ,%levels))
+                                                       :value-form `(uax-9::reorder ,%levels)
+                                                       :expected reorder
+                                                       :body (lambda () (uax-9::reorder %levels))
+                                                       :comparison 'level=
+                                                       :description (format NIL "#~d" i)))))))
                             (when (logtest 1 bitset) (test 2))
                             (when (logtest 2 bitset) (test 0))
                             (when (logtest 4 bitset) (test 1))))))))
