@@ -60,6 +60,38 @@ Failed: ~9,,'':d (~2d%)~%"
 (defun string-for-bidi-classes (classes)
   (map 'string (lambda (c) (cdr (assoc c +class-character-map+))) classes))
 
+(defun maybe-parse (x)
+  (if (string-equal x "x")
+      T
+      (parse-integer x)))
+
+(defun test-entry (i string dir levels reorder)
+  (multiple-value-bind (result-levels level)
+      (eval-in-context
+       *context*
+       (make-instance 'finishing-result
+                      :expression `(finish (uax-9::run-algorithm ,string ,dir))
+                      :body (lambda () (uax-9::run-algorithm string dir))))
+    (let ((%levels
+            (eval-in-context
+             *context*
+             (make-instance 'comparison-result
+                            :expression `(is level= ,levels (uax-9::levels ,string ,level ,result-levels))
+                            :value-form `(uax-9::levels ,string ,level ,result-levels)
+                            :expected levels
+                            :body (lambda () (uax-9::levels string level result-levels))
+                            :comparison 'level=
+                            :description (format NIL "#~d" i)))))
+      (eval-in-context
+       *context*
+       (make-instance 'comparison-result
+                      :expression `(is level= ,reorder (uax-9::reorder ,%levels))
+                      :value-form `(uax-9::reorder ,%levels)
+                      :expected reorder
+                      :body (lambda () (uax-9::reorder %levels))
+                      :comparison 'level=
+                      :description (format NIL "#~d" i))))))
+
 (define-test bidi-test
   :parent uax-9
   (with-open-file (stream (make-pathname :name "BidiTest" :type "txt" :defaults uax-9::*here*)
@@ -72,11 +104,7 @@ Failed: ~9,,'':d (~2d%)~%"
           while line
           do (when (and (string/= "" line) (char/= #\# (char line 0)))
                (cond ((prefix-p "@Levels:" line)
-                      (setf levels (map 'vector (lambda (part)
-                                                  (if (string-equal part "x")
-                                                      T
-                                                      (parse-integer part)))
-                                        (split #\  line :start (length "@Levels: ")))))
+                      (setf levels (map 'vector #'maybe-parse (split #\  line :start (length "@Levels: ")))))
                      ((prefix-p "@Reorder:" line)
                       (setf reorder (coerce (loop with parts = (split #\  line :start (length "@Reorder: "))
                                                   for level across levels
@@ -89,32 +117,8 @@ Failed: ~9,,'':d (~2d%)~%"
                                (types (loop for part in (split #\  input)
                                             collect (find-symbol part "KEYWORD")))
                                (string (string-for-bidi-classes types)))
-                          (flet ((test (level)
-                                   (multiple-value-bind (result-levels level)
-                                       (eval-in-context
-                                        *context*
-                                        (make-instance 'finishing-result
-                                                       :expression `(finish (uax-9::run-algorithm ,types ,level))
-                                                       :body (lambda () (uax-9::run-algorithm string level))))
-                                     (let ((%levels
-                                             (eval-in-context
-                                              *context*
-                                              (make-instance 'comparison-result
-                                                             :expression `(is level= ,levels (uax-9::levels ,string ,level ,result-levels))
-                                                             :value-form `(uax-9::levels ,types ,level ,result-levels)
-                                                             :expected levels
-                                                             :body (lambda () (uax-9::levels string level result-levels))
-                                                             :comparison 'level=
-                                                             :description (format NIL "#~d" i)))))
-                                       (eval-in-context
-                                        *context*
-                                        (make-instance 'comparison-result
-                                                       :expression `(is level= ,reorder (uax-9::reorder ,%levels))
-                                                       :value-form `(uax-9::reorder ,%levels)
-                                                       :expected reorder
-                                                       :body (lambda () (uax-9::reorder %levels))
-                                                       :comparison 'level=
-                                                       :description (format NIL "#~d" i)))))))
+                          (flet ((test (dir)
+                                   (test-entry i string dir levels reorder)))
                             (when (logtest 1 bitset) (test 2))
                             (when (logtest 2 bitset) (test 0))
                             (when (logtest 4 bitset) (test 1))))))))
@@ -122,4 +126,24 @@ Failed: ~9,,'':d (~2d%)~%"
                (format T "~& ~8,,'':d lines processed." i)))))
 
 (define-test bidi-character-test
-  :parent uax-9)
+  :parent uax-9
+  (with-open-file (stream (make-pathname :name "BidiCharacterTest" :type "txt" :defaults uax-9::*here*)
+                          :direction :input
+                          :element-type 'character
+                          :external-format :utf-8)
+    (loop for i from 1
+          for line = (read-line stream NIL)
+          while line
+          do (when (and (string/= "" line) (char/= #\# (char line 0)))
+               (destructuring-bind (points dir level levels reorder) (split #\; line)
+                 (let* ((points (map 'vector (lambda (x) (parse-integer x :radix 16)) (split #\Space points)))
+                        (string (map 'string #'code-char points))
+                        (dir (cond ((string= dir "0") 0)
+                                   ((string= dir "1") 1)
+                                   ((string= dir "2") 2)))
+                        (level (parse-integer level))
+                        (levels (map 'vector #'maybe-parse (split #\Space levels)))
+                        (reorder (map 'vector #'maybe-parse (split #\Space reorder))))
+                   (test-entry i string dir levels reorder))))
+             (when (= 0 (mod i 10000))
+               (format T "~& ~8,,'':d lines processed." i)))))
