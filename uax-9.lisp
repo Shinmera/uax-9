@@ -205,7 +205,8 @@
 
 (defun run-algorithm (string &optional (level 2))
   ;; FIXME: Level should be more lispy (keywords)
-  (let ((classes (make-class-array string)))
+  (let ((classes (make-class-array string))
+        (pairs ....))
     (multiple-value-bind (matching-pdis matching-initiator) (determine-matching-isolates classes)
       (when (= 2 level)
         (setf level (determine-paragraph-embedding-level classes matching-pdis 0 (length classes))))
@@ -213,7 +214,7 @@
         (let ((sequences (determine-isolating-run-sequences string level result-types result-levels matching-pdis matching-initiator)))
           (loop for sequence across sequences
                 do (resolve-weak-types sequence)
-                   (resolve-paired-brackets sequence)
+                   (resolve-paired-brackets sequence string pairs)
                    (resolve-neutral-types sequence)
                    (resolve-implicit-levels sequence)
                    (apply-levels-and-types sequence result-types result-levels))

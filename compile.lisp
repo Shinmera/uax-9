@@ -55,8 +55,9 @@
     (let ((from (parse-integer line :end from :radix 16))
           (to (parse-integer line :start (+ from 2) :end to :radix 16))
           (type (ecase (char line (+ to 2))
-                  (#\o 0)
-                  (#\c 1))))
+                  (#\n 0)
+                  (#\o 1)
+                  (#\c 2))))
       (setf (gethash from data) (logior to (ash type 25))))))
 
 (defun compile-bidi-brackets-table (&key (source (make-pathname :name "BidiBrackets" :type "txt" :defaults uax-9::*here*))

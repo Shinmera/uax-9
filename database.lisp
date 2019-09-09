@@ -14,6 +14,9 @@
 (defvar *bidi-brackets-table-file* (make-pathname :name "BidiBrackets" :type "dat" :defaults *here*))
 (defvar *bidi-mirroring-table-file* (make-pathname :name "BidiMirroring" :type "dat" :defaults *here*))
 
+(defconstant MAX-DEPTH 125)
+(defconstant MAX-PAIRING-DEPTH 63)
+
 (deftype idx ()
   '(integer 0 #.ARRAY-DIMENSION-LIMIT))
 

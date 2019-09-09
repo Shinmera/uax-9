@@ -51,7 +51,88 @@
         (let ((eos (type-for-level (max succ-level level))))
           (make-seq indexes types levels level sos eos))))))
 
-(defun resolve-paired-brackets (seq))
+(defun resolve-paired-brackets (seq string pairs)
+  (let ((indices (seq-indices seq))
+        (sos (seq-sos seq))
+        (dir (if (= 1 (logand 1 level))
+                 (class-id :R)
+                 (class-id :L)))
+        (types (seq-types seq))
+        (openers ())
+        (pair-positions ()))
+    ;; locateBrackets
+    (loop for i from 0 below (length indices)
+          for type = (bracket-type (aref string (aref indices i)))
+          do (unless (or (= type 0)
+                         (/= (or (aref types i) (class-id :ON))))
+               (case type
+                 ;; Open
+                 (1 (when (= (length openers) MAX-PAIRING-DEPTH)
+                      (setf openers ())
+                      (return))
+                  (push i openers))
+                 ;; Close
+                 (2 (when openers
+                      (loop for cons on openers
+                            for opener = (car cons)
+                            do (when (= (aref pairs (aref indices opener))
+                                        (aref pairs (aref indices i)))
+                                 (push pair-positions (cons opener i))
+                                 (setf openers cons)
+                                 (return))))))))
+    ;; resolveBrackets
+    (loop for pair in pair-positions
+          for dir-pair = (classify-pair-content types pair dir)
+          do (unless (= dir-pair (class-id :ON))
+               (when (/= dir-pair dir)
+                 (setf dir-pair (class-before-pair types sos pair))
+                 (when (or (= dir-pair dir) (= dir-pair (class-id :ON)))
+                   (setf dir-pair dir-embed))))
+             (set-brackets-to-type string indices types pair dir))))
+
+(defun normalize-strong-type-n0 (code)
+  (cond ((= code (class-id :L))
+         (class-id :L))
+        ((or (= code (class-id :R))
+             (= code (class-id :EN))
+             (= code (class-id :AN))
+             (= code (class-id :AL)))
+         (class-id :R))
+        (T
+         (class-id :ON))))
+
+(defun classify-pair-content (types pair dir-embed)
+  (loop with opposite = (class-id :ON)
+        for i from (1+ (car pair)) below (cdr pair)
+        for dir = (normalize-strong-type-n0 (aref types i))
+        do (unless (= dir (class-id :ON))
+             (when (= dir dir-embed)
+               (return dir))
+             (setf opposite dir))
+        finally (return opposite)))
+
+(defun class-before-pair (types sos pair)
+  (loop for i downfrom (1- (car pair)) to 0
+        for dir = (normalize-strong-type-n0 (aref types i))
+        do (when (/= dir (class-id :ON))
+             (return dir))
+        finally (return sos)))
+
+(defun set-brackets-to-type (string indices types pair dir)
+  (destructuring-bind (opener . closer) pair
+    (setf (aref types opener) dir)
+    (setf (aref types closer) dir)
+    ;; Done twice just to skip the closer character... yeesh.
+    (loop for i from (1+ opener) below closer
+          for index = (aref indices i)
+          do (if (= (class-at string index) (class-id :NSM))
+                 (setf (aref types i) dir)
+                 (loop-finish)))
+    (loop for i from (1+ closer) below (length indices)
+          for index = (aref indices i)
+          do (if (= (class-at string index) (class-id :NSM))
+                 (setf (aref types i) dir)
+                 (loop-finish)))))
 
 (defun find-run-limit (seq start end valid)
   (let ((types (seq-types seq)))
