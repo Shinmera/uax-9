@@ -49,7 +49,7 @@
                                       (aref result-levels limit)
                                       paragraph-level)))))
         (let ((eos (type-for-level (max succ-level level))))
-          (make-seq (copy-seq indexes) types levels level sos eos))))))
+          (make-seq indexes types levels level sos eos))))))
 
 (defun resolve-paired-brackets (seq))
 

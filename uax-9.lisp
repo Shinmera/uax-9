@@ -189,8 +189,8 @@
                                        (eql last-type (class-id :FSI)))
                                    (/= (length string) (aref matching-pdis last-char)))
                               (setf run (aref run-for-char (aref matching-pdis last-char)))
-                              (loop-finish))))
-               (vector-push (make-isolating-run-sequence current string level result-types result-levels) sequences)))
+                              (loop-finish)))
+                     finally (vector-push (make-isolating-run-sequence (subseq current 0 current-length) string level result-types result-levels) sequences))))
     sequences))
 
 (defun assign-levels-to-characters-removed-by-x9 (string level result-types result-levels)
@@ -220,7 +220,7 @@
           (assign-levels-to-characters-removed-by-x9 string level result-types result-levels)
           (values result-levels level))))))
 
-(defun levels (string level result-levels &optional line-breaks)
+(defun levels (string paragraph-level result-levels &optional line-breaks)
   ;; FIXME: turn this into call-with-* style that does not allocate anything and instead
   ;;        interactively asks for line breaks as it scans along
   (let ((results (copy-seq result-levels)))
@@ -228,16 +228,16 @@
           for type = (class-at string i)
           do (when (or (= type (class-id :B))
                        (= type (class-id :S)))
-               (setf (aref results i) level)
+               (setf (aref results i) paragraph-level)
                (loop for j downfrom (1- i) to 0
                      do (if (whitespace-p (class-at string j))
-                            (setf (aref results j) level)
+                            (setf (aref results j) paragraph-level)
                             (loop-finish)))))
     (loop with start = 0
           for limit in (or line-breaks (list (length string)))
           do (loop for j downfrom (1- limit) above start
                    do (if (whitespace-p (class-at string j))
-                          (setf (aref results j) level)
+                          (setf (aref results j) paragraph-level)
                           (loop-finish)))
              (setf start limit))
     results))
