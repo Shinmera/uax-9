@@ -51,10 +51,10 @@
         (let ((eos (type-for-level (max succ-level level))))
           (make-seq indexes types levels level sos eos))))))
 
-(defun resolve-paired-brackets (seq string pairs)
+(defun resolve-paired-brackets (seq string)
   (let ((indices (seq-indices seq))
         (sos (seq-sos seq))
-        (dir (if (= 1 (logand 1 level))
+        (dir (if (= 1 (logand 1 (seq-level seq)))
                  (class-id :R)
                  (class-id :L)))
         (types (seq-types seq))
@@ -62,10 +62,10 @@
         (pair-positions ()))
     ;; locateBrackets
     (loop for i from 0 below (length indices)
-          for type = (bracket-type (aref string (aref indices i)))
+          for type = (bracket-type-at string (aref indices i))
           do (unless (or (= type 0)
-                         (/= (or (aref types i) (class-id :ON))))
-               (case type
+                         (/= (aref types i) (class-id :ON)))
+               (ecase type
                  ;; Open
                  (1 (when (= (length openers) MAX-PAIRING-DEPTH)
                       (setf openers ())
@@ -75,11 +75,12 @@
                  (2 (when openers
                       (loop for cons on openers
                             for opener = (car cons)
-                            do (when (= (aref pairs (aref indices opener))
-                                        (aref pairs (aref indices i)))
-                                 (push pair-positions (cons opener i))
+                            do (when (= (char-code (aref string (aref indices opener)))
+                                        (bracket-sibling-at string (aref indices i)))
+                                 (push (cons opener i) pair-positions)
                                  (setf openers cons)
                                  (return))))))))
+    (setf pair-positions (sort pair-positions #'< :key #'car))
     ;; resolveBrackets
     (loop for pair in pair-positions
           for dir-pair = (classify-pair-content types pair dir)
@@ -87,7 +88,7 @@
                (when (/= dir-pair dir)
                  (setf dir-pair (class-before-pair types sos pair))
                  (when (or (= dir-pair dir) (= dir-pair (class-id :ON)))
-                   (setf dir-pair dir-embed))))
+                   (setf dir-pair dir))))
              (set-brackets-to-type string indices types pair dir))))
 
 (defun normalize-strong-type-n0 (code)

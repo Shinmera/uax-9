@@ -6,10 +6,6 @@
 
 (in-package #:org.shirakumo.alloy.uax-9)
 
-(declaim (inline class-at))
-(defun class-at (string i)
-  (bidi-class (char-code (char string i))))
-
 (defun bidi-string-p (string)
   (declare (optimize speed))
   (declare (type string string))
@@ -205,8 +201,7 @@
 
 (defun run-algorithm (string &optional (level 2))
   ;; FIXME: Level should be more lispy (keywords)
-  (let ((classes (make-class-array string))
-        (pairs ....))
+  (let ((classes (make-class-array string)))
     (multiple-value-bind (matching-pdis matching-initiator) (determine-matching-isolates classes)
       (when (= 2 level)
         (setf level (determine-paragraph-embedding-level classes matching-pdis 0 (length classes))))
@@ -214,7 +209,7 @@
         (let ((sequences (determine-isolating-run-sequences string level result-types result-levels matching-pdis matching-initiator)))
           (loop for sequence across sequences
                 do (resolve-weak-types sequence)
-                   (resolve-paired-brackets sequence string pairs)
+                   (resolve-paired-brackets sequence string)
                    (resolve-neutral-types sequence)
                    (resolve-implicit-levels sequence)
                    (apply-levels-and-types sequence result-types result-levels))

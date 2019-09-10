@@ -185,3 +185,19 @@
           (compile-databases)))
     (error (e)
       (format T "~&UAX-9: ~a" e))))
+
+(declaim (inline code-at))
+(defun code-at (string i)
+  (char-code (char string i)))
+
+(declaim (inline class-at))
+(defun class-at (string i)
+  (bidi-class (code-at string i)))
+
+(declaim (inline bracket-sibling-at))
+(defun bracket-sibling-at (string i)
+  (bracket-sibling (code-at string i)))
+
+(declaim (inline bracket-type-at))
+(defun bracket-type-at (string i)
+  (bracket-type (code-at string i)))
