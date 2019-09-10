@@ -216,10 +216,12 @@
           (assign-levels-to-characters-removed-by-x9 string level result-types result-levels)
           (values result-levels level))))))
 
-(defun levels (string paragraph-level result-levels &optional line-breaks)
-  ;; FIXME: turn this into call-with-* style that does not allocate anything and instead
-  ;;        interactively asks for line breaks as it scans along
-  (let ((results (copy-seq result-levels)))
+(defun levels (string &key (paragraph-direction :auto) line-breaks)
+  (multiple-value-bind (results paragraph-level)
+      (run-algorithm string (ecase paragraph-direction
+                              (:left-to-right 0)
+                              (:right-to-left 1)
+                              (:auto 2)))
     (loop for i from 0 below (length results)
           for type = (class-at string i)
           do (when (or (= type (class-id :B))

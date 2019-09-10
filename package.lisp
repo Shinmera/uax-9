@@ -11,4 +11,6 @@
    #:*bidi-brackets-table-file*
    #:*bidi-mirroring-table-file*
    #:load-databases
-   #:compile-databases))
+   #:compile-databases
+   #:levels
+   #:reorder))
