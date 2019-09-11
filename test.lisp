@@ -65,29 +65,32 @@ Failed: ~9,,'':d (~2d%)~%"
       T
       (parse-integer x)))
 
-(defun test-entry (i string dir levels reorder)
-  (multiple-value-bind (result-levels level)
+(defun test-entry (i string dir levels reorder &optional level)
+  (multiple-value-bind (result-levels found-level)
       (eval-in-context
        *context*
        (make-instance 'comparison-result
                       :expression `(is level= ,levels (uax-9:levels ,string :paragraph-direction ,dir))
-                      :value-form `(uax-9::levels ,string :paragraph-direction ,dir)
+                      :value-form `(uax-9:levels ,string :paragraph-direction ,dir)
                       :expected levels
-                      :body (lambda () (uax-9::levels string :paragraph-direction dir))
+                      :body (lambda () (uax-9:levels string :paragraph-direction dir))
                       :comparison 'level=
                       :description (format NIL "#~d" i)))
+    (when level
+      (is = level found-level))
     (eval-in-context
      *context*
      (make-instance 'comparison-result
                     :expression `(is level= ,reorder (uax-9:reorder ,result-levels))
-                    :value-form `(uax-9::reorder ,result-levels)
+                    :value-form `(uax-9:reorder ,result-levels)
                     :expected reorder
-                    :body (lambda () (uax-9::reorder result-levels))
+                    :body (lambda () (uax-9:reorder result-levels))
                     :comparison 'level=
                     :description (format NIL "#~d" i)))))
 
 (define-test bidi-test
   :parent uax-9
+  #+NIL
   (with-open-file (stream (make-pathname :name "BidiTest" :type "txt" :defaults uax-9::*here*)
                           :direction :input
                           :element-type 'character
@@ -137,7 +140,10 @@ Failed: ~9,,'':d (~2d%)~%"
                                    ((string= dir "2") :auto)))
                         (level (parse-integer level))
                         (levels (map 'vector #'maybe-parse (split #\Space levels)))
-                        (reorder (map 'vector #'maybe-parse (split #\Space reorder))))
-                   (test-entry i string dir levels reorder))))
+                        (reorder (coerce (loop with parts = (split #\Space reorder)
+                                               for level across levels
+                                               collect (if (eql T level) T (parse-integer (pop parts))))
+                                         'vector)))
+                   (test-entry i string dir levels reorder level))))
              (when (= 0 (mod i 10000))
                (format T "~& ~8,,'':d lines processed." i)))))
