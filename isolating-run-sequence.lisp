@@ -75,8 +75,12 @@
                  (2 (when openers
                       (loop for cons on openers
                             for opener = (car cons)
-                            do (when (= (code-at string (aref indices opener))
-                                        (bracket-sibling-at string (aref indices i)))
+                            do (when (or (= (code-at string (aref indices i))
+                                            (bracket-sibling-at string (aref indices opener)))
+                                         (and (= (code-at string (aref indices i)) #x232A)
+                                              (= (bracket-sibling-at string (aref indices opener)) #x3009))
+                                         (and (= (code-at string (aref indices i)) #x3009)
+                                              (= (bracket-sibling-at string (aref indices opener)) #x232A)))
                                  (push (cons opener i) pair-positions)
                                  (setf openers (cdr cons))
                                  (loop-finish))))))))
