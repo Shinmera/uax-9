@@ -140,6 +140,7 @@
                  (loop-finish)))))
 
 (defun find-run-limit (seq start end valid)
+  ;; FIXME: optimise by not testing through list, but instead passing closure.
   (let ((types (seq-types seq)))
     (loop for i from start below end
           do (unless (find (aref types i) valid)
@@ -252,19 +253,21 @@
 (defun resolve-implicit-levels (seq)
   (let* ((types (seq-types seq))
          (levels (seq-levels seq)))
-    (cond ((= 0 (logand #x1 (seq-level seq)))
+    (cond ((evenp (seq-level seq))
            (loop for i from 0 below (length types)
                  for type = (aref types i)
-                 do (cond ((= type (class-id :L)))
-                          ((= type (class-id :R))
+                 do (cond ((= type (class-id :R))
                            (incf (aref levels i) 1))
-                          (T
+                          ((or (= type (class-id :EN))
+                               (= type (class-id :AN)))
                            (incf (aref levels i) 2)))))
           (T
            (loop for i from 0 below (length types)
-                 do (cond ((= (aref types i) (class-id :R)))
-                          (T
-                           (incf (aref levels i) 1))))))))
+                 for type = (aref types i)
+                 do (when (or (= type (class-id :L))
+                              (= type (class-id :EN))
+                              (= type (class-id :AN)))
+                      (incf (aref levels i) 1)))))))
 
 (defun apply-levels-and-types (seq result-types result-levels)
   (let ((indices (seq-indices seq))

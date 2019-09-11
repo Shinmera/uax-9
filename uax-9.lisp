@@ -253,28 +253,27 @@
              (setf start limit))
     result))
 
-(defun compute-reordering (levels)
-  (let ((result (make-array (length levels) :element-type 'idx)))
-    (loop for i from 0 below (length result)
+(defun index-array-reverse (arr off len)
+  (loop for i from 0 below (/ len 2)
+        do (rotatef (aref arr (+ off i))
+                    (aref arr (+ off len -1 (- i))))))
+
+(defun compute-reordering (levels &optional (off 0) (len (length levels)))
+  (let ((result (make-array len :element-type 'idx))
+        (max-level 0))
+    (loop for i from 0 below len
           do (setf (aref result i) i))
-    (let ((highest-level 0)
-          (lowest-odd (+ MAX-DEPTH 2)))
-      (loop for level across levels
-            do (when (< highest-level level)
-                 (setf highest-level level))
-               (when (and (/= 0 (logand 1 level))
-                          (< level lowest-odd))
-                 (setf lowest-odd level)))
-      (loop for level downfrom highest-level to lowest-odd
-            do (loop for i from 0 below (length levels)
-                     do (when (<= level (aref levels i))
-                          (let ((start i)
-                                (limit (1+ i)))
-                            (loop while (and (< limit (length levels))
-                                             (<= level (aref levels limit)))
-                                  do (incf limit))
-                            (loop for k downfrom (1- limit)
-                                  for j from start below k
-                                  do (rotatef (aref result j) (aref result k)))
-                            (setf i limit)))))
-      result)))
+    ;; FIXME: reorder NSMs
+    (loop for i downfrom (+ off len -1) to off
+          do (when (< max-level (aref levels i))
+               (setf max-level (aref levels i))))
+    (loop for level downfrom max-level above 0
+          do (loop for i downfrom (+ off len -1) to off
+                   do (when (<= level (aref levels i))
+                        (let ((seq-end i))
+                          (decf i)
+                          (loop while (and (<= off i)
+                                           (<= level (aref levels i)))
+                                do (decf i))
+                          (index-array-reverse result (+ i 1) (- seq-end i))))))
+    result))

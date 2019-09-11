@@ -65,6 +65,14 @@ Failed: ~9,,'':d (~2d%)~%"
       T
       (parse-integer x)))
 
+(defun pop-explicit-or-bn (reorder string)
+  (coerce (loop for idx across reorder
+                for class = (uax-9::class-at string idx)
+                unless (or (= class (uax-9::class-id :BN))
+                           (<= (uax-9::class-id :LRE) class (uax-9::class-id :PDF)))
+                collect idx)
+          'vector))
+
 (defun test-entry (i string dir levels reorder &optional level)
   (multiple-value-bind (result-levels found-level)
       (eval-in-context
@@ -81,10 +89,11 @@ Failed: ~9,,'':d (~2d%)~%"
     (eval-in-context
      *context*
      (make-instance 'comparison-result
-                    :expression `(is level= ,reorder (uax-9:reorder ,result-levels))
+                    :expression `(is equal ,reorder (uax-9:reorder ,result-levels))
                     :value-form `(uax-9:reorder ,result-levels)
                     :expected reorder
-                    :body (lambda () (uax-9:reorder result-levels))
+                    :body (lambda () (pop-explicit-or-bn (uax-9:reorder result-levels)
+                                                         string))
                     :comparison 'level=
                     :description (format NIL "#~d" i)))))
 
@@ -102,10 +111,7 @@ Failed: ~9,,'':d (~2d%)~%"
                (cond ((prefix-p "@Levels:" line)
                       (setf levels (map 'vector #'maybe-parse (split #\  line :start (length "@Levels: ")))))
                      ((prefix-p "@Reorder:" line)
-                      (setf reorder (coerce (loop with parts = (split #\  line :start (length "@Reorder: "))
-                                                  for level across levels
-                                                  collect (if (eql T level) T (parse-integer (pop parts))))
-                                            'vector)))
+                      (setf reorder (map 'vector #'parse-integer (split #\  line :start (length "@Reorder: ")))))
                      ((prefix-p "@" line))
                      (T
                       (destructuring-bind (input bitset) (split #\; line)
@@ -139,10 +145,7 @@ Failed: ~9,,'':d (~2d%)~%"
                                    ((string= dir "2") :auto)))
                         (level (parse-integer level))
                         (levels (map 'vector #'maybe-parse (split #\Space levels)))
-                        (reorder (coerce (loop with parts = (split #\Space reorder)
-                                               for level across levels
-                                               collect (if (eql T level) T (parse-integer (pop parts))))
-                                         'vector)))
+                        (reorder (map 'vector #'parse-integer (split #\Space reorder))))
                    (test-entry i string dir levels reorder level))))
              (when (= 0 (mod i 10000))
                (format T "~& ~8,,'':d lines processed." i)))))
