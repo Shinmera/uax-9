@@ -75,13 +75,13 @@
                  (2 (when openers
                       (loop for cons on openers
                             for opener = (car cons)
-                            do (when (= (char-code (aref string (aref indices opener)))
+                            do (when (= (code-at string (aref indices opener))
                                         (bracket-sibling-at string (aref indices i)))
                                  (push (cons opener i) pair-positions)
-                                 (setf openers cons)
-                                 (return))))))))
+                                 (setf openers (cdr cons))
+                                 (loop-finish))))))))
     (setf pair-positions (sort pair-positions #'< :key #'car))
-    ;; resolveBrackets
+    ;; resolveBrackets / assignBracketType
     (loop for pair in pair-positions
           for dir-pair = (classify-pair-content types pair dir)
           do (unless (= dir-pair (class-id :ON))
@@ -89,7 +89,7 @@
                  (setf dir-pair (class-before-pair types sos pair))
                  (when (or (= dir-pair dir) (= dir-pair (class-id :ON)))
                    (setf dir-pair dir))))
-             (set-brackets-to-type string indices types pair dir))))
+             (set-brackets-to-type string indices types pair dir-pair))))
 
 (defun normalize-strong-type-n0 (code)
   (cond ((= code (class-id :L))

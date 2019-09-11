@@ -18,7 +18,7 @@
          (total (length (results report)))
          (passed (length (results-with-status :passed report)))
          (failed (length (results-with-status :failed report))))
-    (format T "~&
+    (format *terminal-io* "~&
 Total:  ~9,,'':d
 Passed: ~9,,'':d (~2d%)
 Failed: ~9,,'':d (~2d%)~%"
@@ -90,7 +90,6 @@ Failed: ~9,,'':d (~2d%)~%"
 
 (define-test bidi-test
   :parent uax-9
-  #+NIL
   (with-open-file (stream (make-pathname :name "BidiTest" :type "txt" :defaults uax-9::*here*)
                           :direction :input
                           :element-type 'character
