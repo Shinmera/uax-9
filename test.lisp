@@ -9,7 +9,7 @@
   (:shadow #:test)
   (:local-nicknames
    (#:uax-9 #:org.shirakumo.alloy.uax-9))
-  (:export #:test #:uax-9))
+  (:export #:test #:uax-9 #:test-speed))
 
 (in-package #:org.shirakumo.alloy.uax-9.test)
 
@@ -50,6 +50,13 @@ Failed: ~9,,'':d (~2d%)~%"
         always (or (eql T a)
                    (eql T b)
                    (= a b))))
+
+(defun make-random-string (size)
+  (let ((string (make-string size)))
+    (map-into string (lambda ()
+                       (loop for x = (random #x10FFFF)
+                             ;unless (<= #xD800 x #xDFFF)
+                             do (return (code-char x)))))))
 
 (defvar +class-character-map+
   (loop for class across uax-9::+bidi-class-list+
@@ -149,3 +156,10 @@ Failed: ~9,,'':d (~2d%)~%"
                    (test-entry i string dir levels reorder level))))
              (when (= 0 (mod i 10000))
                (format T "~& ~8,,'':d lines processed." i)))))
+
+(defun test-speed (&key (samples 1000) (length 1000))
+  (let ((ss (loop repeat samples collect (make-random-string length))))
+    #+sbcl (sb-sprof:reset)
+    #+sbcl (sb-sprof:start-profiling)
+    (time (dolist (s ss) (uax-9:levels s)))
+    #+sbcl (sb-sprof:stop-profiling)))
