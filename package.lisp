@@ -6,6 +6,7 @@
 
 (defpackage #:org.shirakumo.alloy.uax-9
   (:use #:cl)
+  (:shadow #:class)
   (:export
    #:*bidi-class-database-file*
    #:*bidi-brackets-table-file*

@@ -161,5 +161,5 @@ Failed: ~9,,'':d (~2d%)~%"
   (let ((ss (loop repeat samples collect (make-random-string length))))
     #+sbcl (sb-sprof:reset)
     #+sbcl (sb-sprof:start-profiling)
-    (time (dolist (s ss) (uax-9:levels s)))
+    (time (dolist (s ss) (uax-9:reorder (uax-9:levels s))))
     #+sbcl (sb-sprof:stop-profiling)))

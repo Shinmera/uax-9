@@ -17,6 +17,9 @@
 (defconstant MAX-DEPTH 125)
 (defconstant MAX-PAIRING-DEPTH 63)
 
+(deftype class ()
+  `(integer 0 23))
+
 (deftype idx ()
   '(integer 0 #.ARRAY-DIMENSION-LIMIT))
 
