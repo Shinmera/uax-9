@@ -201,8 +201,7 @@
              (setf (aref result-types i) class)
              (setf (aref result-levels i) (aref result-levels (1- i))))))
 
-(defun run-algorithm (string &optional (level 2))
-  ;; FIXME: Level should be more lispy (keywords)
+(defun run-algorithm (string level)
   (let ((classes (make-class-array string)))
     (multiple-value-bind (matching-pdis matching-initiator) (determine-matching-isolates classes)
       (when (= 2 level)
@@ -246,12 +245,7 @@
   (let ((result (make-array (length levels) :element-type 'idx)))
     (loop with start = 0
           for limit in (or line-breaks (list (length levels)))
-          ;; FIXME: avoid allocating temp-levels.
-          for temp-levels = (make-array (- limit start) :element-type '(unsigned-byte 8))
-          do (replace temp-levels levels :start2 start :end2 limit)
-             (let ((temp-order (compute-reordering temp-levels)))
-               (loop for j from 0 below (length temp-order)
-                     do (setf (aref result (+ start j)) (+ start (aref temp-order j)))))
+          do (compute-reordering levels result start (- limit start))
              (setf start limit))
     result))
 
@@ -260,9 +254,8 @@
         do (rotatef (aref arr (+ off i))
                     (aref arr (+ off len -1 (- i))))))
 
-(defun compute-reordering (levels &optional (off 0) (len (length levels)))
-  (let ((result (make-array len :element-type 'idx))
-        (max-level 0))
+(defun compute-reordering (levels result &optional (off 0) (len (length levels)))
+  (let ((max-level 0))
     (loop for i from 0 below len
           do (setf (aref result i) i))
     ;; FIXME: reorder NSMs
@@ -277,5 +270,4 @@
                           (loop while (and (<= off i)
                                            (<= level (aref levels i)))
                                 do (decf i))
-                          (index-array-reverse result (+ i 1) (- seq-end i))))))
-    result))
+                          (index-array-reverse result (+ i 1) (- seq-end i))))))))

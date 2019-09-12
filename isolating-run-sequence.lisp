@@ -121,11 +121,10 @@
                  (setf (aref types i) dir)
                  (loop-finish)))))
 
-(defun find-run-limit (seq start end valid)
-  ;; FIXME: optimise by not testing through list, but instead passing closure.
+(defun find-run-limit (seq start end valid-p)
   (let ((types (seq-types seq)))
     (loop for i from start below end
-          do (unless (find (aref types i) valid)
+          do (unless (funcall valid-p (aref types i))
                (return i))
           finally (return end))))
 
@@ -136,13 +135,9 @@
     (loop with preceeding-type = (seq-sos seq)
           for i from 0 below (length types)
           for type = (aref types i)
-          do (cond ((class= type :NSM)
-                    (setf (aref types i) preceeding-type))
-                   (T
-                    ;; WTF: this seems redundant
-                    (when (class<= :LRI type :PDI)
-                      (setf preceeding-type (class-id :ON)))
-                    (setf preceeding-type type))))
+          do (if (class= type :NSM)
+                 (setf (aref types i) preceeding-type)
+                 (setf preceeding-type type)))
     ;; W2
     (loop for i from 0 below (length types)
           do (when (class= (aref types i) :EN)
@@ -176,7 +171,7 @@
     (loop for i from 0 below (length types)
           do (when (class= (aref types i) :ET)
                (let* ((run-start i)
-                      (run-limit (find-run-limit seq run-start (length types) (class-ids :ET)))
+                      (run-limit (find-run-limit seq run-start (length types) (lambda (x) (class= x :ET))))
                       (type (if (= 0 run-start) (seq-sos seq) (aref types (1- run-start)))))
                  (unless (class= type :EN)
                    (setf type (if (= run-limit (length types)) (seq-eos seq) (aref types run-limit))))
@@ -207,10 +202,9 @@
   (let ((types (seq-types seq)))
     (loop for i from 0 below (length types)
           for type = (aref types i)
-          do (when (or (class<= :B type :ON)
-                       (class<= :LRI type :PDI))
+          do (when (neutral-type-p type)
                (let* ((run-start i)
-                      (run-limit (find-run-limit seq run-start (length types) (class-ids :B :S :WS :ON :RLI :LRI :FSI :PDI)))
+                      (run-limit (find-run-limit seq run-start (length types) #'neutral-type-p))
                       leading-type trailing-type)
                  (cond ((= 0 run-start)
                         (setf leading-type (seq-sos seq)))

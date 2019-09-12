@@ -236,3 +236,8 @@
   (if (evenp level)
       (class-id :L)
       (class-id :R)))
+
+(declaim (inline neutral-type-p))
+(defun neutral-type-p (type)
+  (or (class<= :B type :ON)
+      (class<= :LRI type :PDI)))
