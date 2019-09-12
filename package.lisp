@@ -11,6 +11,7 @@
    #:*bidi-class-database-file*
    #:*bidi-brackets-table-file*
    #:*bidi-mirroring-table-file*
+   #:no-database-files
    #:load-databases
    #:compile-databases
    #:levels

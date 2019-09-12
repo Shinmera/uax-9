@@ -1,4 +1,16 @@
-## Don't look AAAAAAAAAAAAAAAa
+## About UAX-9
+This is an implementation of the "Unicode Standards Annex #9"(https://www.unicod.org/reports/tr9/)'s bidirectional text algorithm. It provides a convenient way to handle text bidirectionality.
+
+Bidirectional text occurs when text of different directionality is mixed. For instance, if arabic text, which is typically right-to-left, intersperses roman numerals, which is typically left-to-right, then the roman numerals need to be rendered in reversed order to produce the correct display order. 
+
+The Unicode Bidirectional algorithm implemented by this library handles the reordering of such text into a canonical order that can then be used by text rendering engines to produce correctly laid out text.
+
+Note that this algorithm does not analyse line breaking. You must provide the appropriate line breaking opportunities yourself, see "UAX-9"(https://shinmera.github.io/uax-9/). The algorithm will also not handle paragraph breaks, but instead expects you to deliver properly segmented strings for analysis.
+
+## How To
+The system will compile binary database files on first load. Should anything go wrong during this process, a note is produced on load. If you would like to prevent this automated loading, push ``uax-9-no-load`` to ``*features*`` before loading. You can then manually load the database files when convenient through ``load-databases``.
+
+Once loaded, you can compute the line breaking levels of a string with the ``levels`` function. To use this information and produce a reordering index vector, pass its result to the ``reorder`` function.
 
 ## External Files
 The following files were retrieved from external resources, last accessed on 4.9.2019.

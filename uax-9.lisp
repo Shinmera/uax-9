@@ -220,37 +220,49 @@
           (assign-levels-to-characters-removed-by-x9 string level result-types result-levels)
           (values result-levels level))))))
 
-(defun levels (string &key (paragraph-direction :auto) line-breaks)
-  (multiple-value-bind (results paragraph-level)
-      (run-algorithm string (ecase paragraph-direction
-                              (:left-to-right 0)
-                              (:right-to-left 1)
-                              (:auto 2)))
-    (loop for i from 0 below (length results)
-          for type = (class-at string i)
-          do (when (or (class= type :B)
-                       (class= type :S))
-               (setf (aref results i) paragraph-level)
-               (loop for j downfrom (1- i) to 0
+(defun levels (string &key (base-direction :auto) line-breaks start end)
+  ;; FIXME: Use START/END
+  (let ((start (or start 0))
+        (end (or end (length string))))
+    (multiple-value-bind (results paragraph-level)
+        (run-algorithm string (ecase base-direction
+                                (:left-to-right 0)
+                                (:right-to-left 1)
+                                (:auto 2)))
+      (loop for i from 0 below (length results)
+            for type = (class-at string i)
+            do (when (or (class= type :B)
+                         (class= type :S))
+                 (setf (aref results i) paragraph-level)
+                 (loop for j downfrom (1- i) to 0
+                       do (if (whitespace-p (class-at string j))
+                              (setf (aref results j) paragraph-level)
+                              (loop-finish)))))
+      (loop with start = 0
+            for limit in (or line-breaks (list (length string)))
+            do (loop for j downfrom (1- limit) above start
                      do (if (whitespace-p (class-at string j))
                             (setf (aref results j) paragraph-level)
-                            (loop-finish)))))
-    (loop with start = 0
-          for limit in (or line-breaks (list (length string)))
-          do (loop for j downfrom (1- limit) above start
-                   do (if (whitespace-p (class-at string j))
-                          (setf (aref results j) paragraph-level)
-                          (loop-finish)))
-             (setf start limit))
-    (values results paragraph-level)))
+                            (loop-finish)))
+               (setf start limit))
+      (values results
+              (ecase paragraph-level
+                (0 :left-to-right)
+                (1 :right-to-left))))))
 
-(defun reorder (levels &optional line-breaks)
-  (let ((result (make-array (length levels) :element-type 'idx)))
+(defun make-reorder-array (length)
+  (let ((reorder (make-array length :element-type 'idx)))
+    (dotimes (i length reorder)
+      (setf (aref reorder i) i))))
+
+;; FIXME: Function to do this without generating the indices vector (call-in-order)
+(defun reorder (levels &key line-breaks indexes)
+  (let ((indexes (or indexes (make-reorder-array (length levels)))))
     (loop with start = 0
           for limit in (or line-breaks (list (length levels)))
-          do (compute-reordering levels result start (- limit start))
+          do (compute-reordering levels indexes start (- limit start))
              (setf start limit))
-    result))
+    indexes))
 
 (defun index-array-reverse (arr off len)
   (loop for i from 0 below (/ len 2)
@@ -259,8 +271,6 @@
 
 (defun compute-reordering (levels result &optional (off 0) (len (length levels)))
   (let ((max-level 0))
-    (loop for i from 0 below len
-          do (setf (aref result i) i))
     ;; FIXME: reorder NSMs
     (loop for i downfrom (+ off len -1) to off
           do (when (< max-level (aref levels i))

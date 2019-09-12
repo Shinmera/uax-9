@@ -85,14 +85,17 @@ Failed: ~9,,'':d (~2d%)~%"
       (eval-in-context
        *context*
        (make-instance 'comparison-result
-                      :expression `(is level= ,levels (uax-9:levels ,string :paragraph-direction ,dir))
-                      :value-form `(uax-9:levels ,string :paragraph-direction ,dir)
+                      :expression `(is level= ,levels (uax-9:levels ,string :base-direction ,dir))
+                      :value-form `(uax-9:levels ,string :base-direction ,dir)
                       :expected levels
-                      :body (lambda () (uax-9:levels string :paragraph-direction dir))
+                      :body (lambda () (uax-9:levels string :base-direction dir))
                       :comparison 'level=
                       :description (format NIL "#~d" i)))
     (when level
-      (is = level found-level))
+      (let ((found-level (case found-level
+                           (:left-to-right 0)
+                           (:right-to-left 1))))
+        (is = level found-level)))
     (eval-in-context
      *context*
      (make-instance 'comparison-result
