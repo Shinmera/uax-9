@@ -68,8 +68,8 @@ Failed: ~9,,'':d (~2d%)~%"
 (defun pop-explicit-or-bn (reorder string)
   (coerce (loop for idx across reorder
                 for class = (uax-9::class-at string idx)
-                unless (or (= class (uax-9::class-id :BN))
-                           (<= (uax-9::class-id :LRE) class (uax-9::class-id :PDF)))
+                unless (or (uax-9::class= class :BN)
+                           (uax-9::class<= :LRE class :PDF))
                 collect idx)
           'vector))
 

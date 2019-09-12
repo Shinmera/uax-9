@@ -84,17 +84,6 @@
       `(load-time-value (list ,@(loop for class in classes collect `(class-id ,class))))
       whole))
 
-(declaim (inline whitespace-p))
-(defun whitespace-p (class)
-  (or (= class (class-id :BN))
-      (= class (class-id :WS))
-      (<= (class-id :LRE) class (class-id :PDI))))
-
-(declaim (inline removed-by-x9-p))
-(defun removed-by-x9-p (class)
-  (or (= class (class-id :BN))
-      (<= (class-id :LRE) class (class-id :PDF))))
-
 (declaim (type (simple-array (unsigned-byte 8) (#x110000)) +bidi-class-map+))
 (defglobal +bidi-class-map+ (make-array #x110000 :element-type '(unsigned-byte 8) :initial-element 0))
 
@@ -201,3 +190,43 @@
 (declaim (inline bracket-type-at))
 (defun bracket-type-at (string i)
   (bracket-type (code-at string i)))
+
+(defun class= (class expected)
+  (= class (class-id expected)))
+
+(define-compiler-macro class= (class expected)
+  `(= ,class (class-id ,expected)))
+
+(defun class<= (left class right)
+  (<= (class-id left) class (class-id right)))
+
+(define-compiler-macro class<= (left class right)
+  `(<= (class-id ,left) ,class (class-id ,right)))
+
+(declaim (inline whitespace-p))
+(defun whitespace-p (class)
+  (or (class= class :BN)
+      (class= class :WS)
+      (class<= :LRE class :PDI)))
+
+(declaim (inline removed-by-x9-p))
+(defun removed-by-x9-p (class)
+  (or (class= class :BN)
+      (class<= :LRE class :PDF)))
+
+(defun normalize-strong-type-n0 (code)
+  (cond ((class= code :L)
+         (class-id :L))
+        ((or (class= code :R)
+             (class= code :EN)
+             (class= code :AN)
+             (class= code :AL))
+         (class-id :R))
+        (T
+         (class-id :ON))))
+
+(declaim (inline type-for-level))
+(defun type-for-level (level)
+  (if (evenp level)
+      (class-id :L)
+      (class-id :R)))
