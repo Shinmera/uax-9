@@ -35,6 +35,9 @@
 (deftype levels ()
   `(simple-array (unsigned-byte 8) (*)))
 
+(deftype stack ()
+  `(simple-array (unsigned-byte 32) (128)))
+
 (defun read-u32le (stream)
   (logior
    (ash (read-byte stream) 0)

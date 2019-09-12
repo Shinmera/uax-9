@@ -64,12 +64,13 @@
         finally (return 0)))
 
 (defun determine-explicit-embedding-levels (paragraph-level classes matching-pdis)
-  (let ((stack (make-status-stack))
-        (overflow-isolates 0)
-        (overflow-embeddings 0)
-        (valid-isolates 0)
-        (result-levels (make-array (length classes) :element-type '(unsigned-byte 8) :initial-element paragraph-level))
-        (result-types (copy-seq classes)))
+  (let* ((stack (make-status-stack))
+         (overflow-isolates 0)
+         (overflow-embeddings 0)
+         (valid-isolates 0)
+         (result-levels (make-array (length classes) :element-type '(unsigned-byte 8) :initial-element paragraph-level))
+         (result-types (copy-seq classes)))
+    (declare (dynamic-extent stack))
     (push-status paragraph-level (class-id :ON) NIL stack)
     (loop for i from 0 below (length classes)
           for class = (aref classes i)
@@ -141,6 +142,8 @@
     (values result-types result-levels)))
 
 (defun determine-level-runs (string result-levels)
+  (declare (optimize speed))
+  (declare (type string string) (type levels result-levels))
   ;; FIXME: this seems very inefficient?
   (let ((temp (make-array (length string) :element-type 'idx))
         (runs (make-array (length string) :fill-pointer 0))
