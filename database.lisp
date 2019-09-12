@@ -26,6 +26,12 @@
 (deftype level ()
   '(integer 0 125))
 
+(deftype classes ()
+  `(simple-array (unsigned-byte 8) (*)))
+
+(deftype levels ()
+  `(simple-array (unsigned-byte 8) (*)))
+
 (defun read-u32le (stream)
   (logior
    (ash (read-byte stream) 0)
