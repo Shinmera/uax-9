@@ -121,6 +121,7 @@
                  (setf (aref types i) dir)
                  (loop-finish)))))
 
+(declaim (ftype (function (seq idx idx function) idx) find-run-limit))
 (defun find-run-limit (seq start end valid-p)
   (let ((types (seq-types seq)))
     (loop for i from start below end
@@ -129,6 +130,7 @@
           finally (return end))))
 
 (defun resolve-weak-types (seq)
+  (declare (optimize speed))
   ;; FIXME: it feels like a lot of these loops could be combined.
   (let ((types (seq-types seq)))
     ;; W1
@@ -171,32 +173,33 @@
     (loop for i from 0 below (length types)
           do (when (class= (aref types i) :ET)
                (let* ((run-start i)
-                      (run-limit (find-run-limit seq run-start (length types) (lambda (x) (class= x :ET))))
+                      (run-limit (find-run-limit seq run-start (length types) (lambda (x) (class= (the class x) :ET))))
                       (type (if (= 0 run-start) (seq-sos seq) (aref types (1- run-start)))))
                  (unless (class= type :EN)
                    (setf type (if (= run-limit (length types)) (seq-eos seq) (aref types run-limit))))
                  (when (class= type :EN)
-                   (fill types (class-id :EN) :start run-start :end run-limit))
+                   (loop for i from run-start below run-limit
+                         do (setf (aref types i) (class-id :EN))))
                  (setf i run-limit))))
-    ;; W6
+    ;; W6/W7
     (loop for i from 0 below (length types)
           for type = (aref types i)
-          do (when (or (class= type :ES)
-                       (class= type :ET)
-                       (class= type :CS))
-               (setf (aref types i) (class-id :ON))))
-    ;; W7
-    (loop for i from 0 below (length types)
-          do (when (class= (aref types i) :EN)
-               (let ((prev-strong-type (seq-sos seq)))
-                 (loop for j downfrom (1- i) to 0
-                       for type = (aref types j)
-                       do (when (or (class= type :L)
-                                    (class= type :R))
-                            (setf prev-strong-type type)
-                            (loop-finish)))
-                 (when (class= prev-strong-type :L)
-                   (setf (aref types i) (class-id :L))))))))
+          do (cond ;; W6
+               ((or (class= type :ES)
+                    (class= type :ET)
+                    (class= type :CS))
+                (setf (aref types i) (class-id :ON)))
+               ;; W7
+               ((class= (aref types i) :EN)
+                (let ((prev-strong-type (seq-sos seq)))
+                  (loop for j downfrom (1- i) to 0
+                        for type = (aref types j)
+                        do (when (or (class= type :L)
+                                     (class= type :R))
+                             (setf prev-strong-type type)
+                             (loop-finish)))
+                  (when (class= prev-strong-type :L)
+                    (setf (aref types i) (class-id :L)))))))))
 
 (defun resolve-neutral-types (seq)
   (let ((types (seq-types seq)))
@@ -223,7 +226,8 @@
                  (let ((resolved-type (if (= leading-type trailing-type)
                                           leading-type
                                           (type-for-level (seq-level seq)))))
-                   (fill types resolved-type :start run-start :end run-limit)
+                   (loop for i from run-start below run-limit
+                         do (setf (aref types i) resolved-type))
                    (setf i run-limit)))))))
 
 (defun resolve-implicit-levels (seq)
