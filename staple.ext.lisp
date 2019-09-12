@@ -15,3 +15,5 @@
 (defmethod staple:page-type ((system (eql (asdf:find-system :uax-9))))
   'page*)
 
+(defmethod staple:packages ((system (eql (asdf:find-system :uax-9))))
+  (list (find-package (string '#:org.shirakumo.alloy.uax-9))))

@@ -42,7 +42,7 @@ See LOAD-DATABASES")
 If one of the files is missing, a warning of type NO-DATABASE-FILES is
 signalled. If the loading succeeds, T is returned.
 
-See *LINE-BREAK-DATABASE-FILE*
+See *BIDI-CLASS-DATABASE-FILE*
 See *BIDI-BRACKETS-TABLE-FILE*
 See *BIDI-CLASS-DATABASE-FILE*
 See NO-DATABASE-FILES")
@@ -54,7 +54,7 @@ This will load an optional part of the system and compile the database
 files to an efficient byte representation. If the compilation is
 successful, LOAD-DATABASES is called automatically.
 
-See *LINE-BREAK-DATABASE-FILE*
+See *BIDI-CLASS-DATABASE-FILE*
 See *BIDI-BRACKETS-TABLE-FILE*
 See *BIDI-CLASS-DATABASE-FILE*
 See LOAD-DATABASES")
