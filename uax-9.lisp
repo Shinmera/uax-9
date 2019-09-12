@@ -127,11 +127,13 @@
                                 (null (last-isolate stack)))
                            (pop-status stack))))
                    ((class= class :B)
-                    (empty-stack stack)
                     (setf overflow-isolates 0)
                     (setf overflow-embeddings 0)
                     (setf valid-isolates 0)
-                    (setf (aref result-levels i) paragraph-level))
+                    (setf (aref result-levels i) paragraph-level)
+                    ;; Start fresh
+                    (empty-stack stack)
+                    (push-status paragraph-level (class-id :ON) NIL stack))
                    (T
                     (setf (aref result-levels i) (last-level stack))
                     (unless (class= (last-override stack) :ON)
