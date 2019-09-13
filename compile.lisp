@@ -90,8 +90,16 @@
           (to (parse-integer line :start (+ 2 from) :end to :radix 16)))
       (setf (gethash from data) to))))
 
+(defun set-mirror-empty-pair (data line)
+  (let* ((line (string-left-trim "# " line))
+         (from (position #\; line)))
+    (let* ((from (parse-integer line :end from :radix 16))
+           (to from))
+      (setf (ldb (byte 1 31) to) 1)
+      (setf (gethash from data) to))))
+
 (defun compile-bidi-mirror-table (&key (source (make-pathname :name "BidiMirroring" :type "txt" :defaults uax-9::*here*))
-                                         (target uax-9:*bidi-mirroring-table-file*))
+                                       (target uax-9:*bidi-mirroring-table-file*))
   (let ((data uax-9::+bidi-mirroring-map+))
     (with-open-file (stream source
                             :direction :input
@@ -99,9 +107,13 @@
                             :external-format :utf-8)
       (loop for line = (read-line stream NIL)
             while line
-            do (when (and (string/= "" line)
+            do (when (and (< 0 (length line))
                           (char/= #\# (char line 0)))
-                 (set-mirror-pair data line))))
+                 (set-mirror-pair data line))
+               (when (and (< 6 (length line))
+                          (loop for i from 2 below 6
+                                always (find (char line i) "0123456789ABCDEF")))
+                 (set-mirror-empty-pair data line))))
     (with-open-file (stream target
                             :direction :output
                             :element-type '(unsigned-byte 8)

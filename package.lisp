@@ -14,5 +14,6 @@
    #:no-database-files
    #:load-databases
    #:compile-databases
+   #:mirror-at
    #:levels
    #:reorder))

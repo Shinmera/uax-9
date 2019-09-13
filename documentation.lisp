@@ -58,6 +58,27 @@ See *BIDI-CLASS-DATABASE-FILE*
 See *BIDI-BRACKETS-TABLE-FILE*
 See *BIDI-CLASS-DATABASE-FILE*
 See LOAD-DATABASES")
+
+  (function mirror-at
+    "Returns the mirrored character at the given position in the string.
+
+Returns two values:
+
+  CHARACTER      --- The character to display. This may either be same
+                     character as was passed in, or its mirror sibling.
+  MANUAL-MIRROR  --- Whether the character needs to be displayed in a
+                     mirrored way in the renderer.
+
+If MANUAL-MIRROR is T, the returned character will be the same as the
+character at that point in the string. The rendering engine displaying
+the character must ensure that it is drawn mirrored instead.
+
+If MANUAL-MIRROR is NIL, the returned character can be drawn in all
+cases to achieve the correct mirroring behaviour.
+
+Note that you should only invoke this function to retrieve the mirror
+pair if the level of the character at the point is uneven and thus
+right-to-left.")
   
   (function levels
     "Computes the directional level for every code point in the string.

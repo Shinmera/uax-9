@@ -203,6 +203,11 @@
 (defun bracket-type-at (string i)
   (bracket-type (code-at string i)))
 
+(declaim (inline mirror-at))
+(defun mirror-at (string i)
+  (let ((mirror (mirror (code-at string i))))
+    (values (code-char (logand #x11FFFF mirror)) (logbitp 31 mirror))))
+
 (defun class= (class expected)
   (= class (class-id expected)))
 
