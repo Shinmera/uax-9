@@ -108,7 +108,14 @@ used to normalise the levels across breaks. If you pass this argument,
 you must pass the same argument to REORDER. If you do not pass this,
 the line end is assumed to be at the end of the string.
 
-See REORDER")
+The values in the levels vector designate which direction the code
+point at this index should have. If the level is even, the direction
+is LEFT-TO-RIGHT; if it is odd, RIGHT-TO-LEFT. You will need this
+information yourself to determine whether to display code points
+mirrored or not when rendering their glyphs.
+
+See REORDER
+See MIRROR-AT")
   
   (function reorder
     "Computes a reordering of indexes into the string to process the code points in the correct order.
@@ -130,4 +137,36 @@ levels vector is created. If passed, you should make sure that the
 indices in the vector make sense -- meaning they should typically be
 in ascending order starting with 0.
 
-See LEVELS"))
+See LEVELS")
+
+  (function call-in-order
+    "Calls the function per character in proper order over the string.
+
+The function must accept two arguments:
+
+  CHARACTER     --- The character to display.
+  MANUAL-MIRROR --- Whether the rendering engine should draw the
+                    character mirrored.
+
+This function will iterate over the string in the proper order to
+respect bidirectionality.
+
+If indexes is not passed, it is automatically computed through REORDER
+on the levels. If levels is not passed, it is automatically computed
+through LEVELS on the string.
+
+Note that the CHARACTER passed to the function is already mirrored if
+a mirrored character exists in unicode. This means you do not need to
+call MIRROR-AT yourself.
+
+See LEVELS
+See REORDER
+See MIRROR-AT
+See DO-IN-ORDER")
+
+  (function do-in-order
+    "Iterates over the string in bidirectional order, binding CHARACTER and MANUAL-MIRROR for each character.
+
+This is a convenience macro around CALL-IN-ORDER.
+
+See CALL-IN-ORDER"))

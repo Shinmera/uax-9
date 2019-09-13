@@ -16,4 +16,6 @@
    #:compile-databases
    #:mirror-at
    #:levels
-   #:reorder))
+   #:reorder
+   #:call-in-order
+   #:do-in-order))

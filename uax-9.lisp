@@ -284,3 +284,19 @@
                                            (<= level (aref levels i)))
                                 do (decf i))
                           (index-array-reverse result (+ i 1) (- seq-end i))))))))
+
+(defun call-in-order (function string &optional levels indexes)
+  (let* ((levels (or levels (levels string)))
+         (indexes (or indexes (reorder levels))))
+    (loop for i from 0 below (length indexes)
+          for idx = (aref indexes i)
+          for rtl = (oddp (aref levels idx))
+          do (if rtl
+                 (multiple-value-call function (mirror-at string idx))
+                 (funcall function (char string idx) NIL)))))
+
+(defmacro do-in-order ((character manual-mirror string &optional levels indexes) &body body)
+  (let ((thunk (gensym "THUNK")))
+    `(flet ((,thunk (,character ,manual-mirror)
+              ,@body))
+       (call-in-order #',thunk ,string ,levels ,indexes))))

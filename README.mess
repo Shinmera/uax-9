@@ -5,12 +5,14 @@ Bidirectional text occurs when text of different directionality is mixed. For in
 
 The Unicode Bidirectional algorithm implemented by this library handles the reordering of such text into a canonical order that can then be used by text rendering engines to produce correctly laid out text.
 
-Note that this algorithm does not analyse line breaking. You must provide the appropriate line breaking opportunities yourself, see "UAX-9"(https://shinmera.github.io/uax-9/). The algorithm will also not handle paragraph breaks, but instead expects you to deliver properly segmented strings for analysis.
+Note that this algorithm does not analyse line breaking. You must provide the appropriate line breaking opportunities yourself, see "UAX-14"(https://shinmera.github.io/uax-14/). The algorithm will also not handle paragraph breaks, but instead expects you to deliver properly segmented strings for analysis.
 
 ## How To
 The system will compile binary database files on first load. Should anything go wrong during this process, a note is produced on load. If you would like to prevent this automated loading, push ``uax-9-no-load`` to ``*features*`` before loading. You can then manually load the database files when convenient through ``load-databases``.
 
-Once loaded, you can compute the line breaking levels of a string with the ``levels`` function. To use this information and produce a reordering index vector, pass its result to the ``reorder`` function.
+Once loaded, you can compute the line breaking levels of a string with the ``levels`` function. To use this information and produce a reordering index vector, pass its result to the ``reorder`` function. Note that when iterating through these characters, the level of the character needs to be taken into consideration, as some characters need to be mirrored when right-to-left oriented. You can detect right-to-left levels by testing whether they are odd. You can then retrieve the potentially mirrored variant of the character through ``mirror-at``.
+
+Alternatively you can also iterate through the string directly in the correct character order (including mirroring) using ``do-in-order``. Also note that some characters will require manual mirroring in the rendering engine as no equivalent mirrored characters exist in Unicode.
 
 ## External Files
 The following files were retrieved from external resources, last accessed on 4.9.2019.
