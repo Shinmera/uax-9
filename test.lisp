@@ -162,7 +162,4 @@ Failed: ~9,,'':d (~2d%)~%"
 
 (defun test-speed (&key (samples 1000) (length 1000))
   (let ((ss (loop repeat samples collect (make-random-string length))))
-    #+sbcl (sb-sprof:reset)
-    #+sbcl (sb-sprof:start-profiling)
-    (time (dolist (s ss) (uax-9:reorder (uax-9:levels s))))
-    #+sbcl (sb-sprof:stop-profiling)))
+    (time (dolist (s ss) (uax-9:reorder (uax-9:levels s))))))
