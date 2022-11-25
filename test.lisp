@@ -13,17 +13,8 @@
 
 (in-package #:org.shirakumo.alloy.uax-9.test)
 
-(defun test (&optional (type 'quiet))
-  (let* ((report (parachute:test 'uax-9 :report type))
-         (total (length (results report)))
-         (passed (length (results-with-status :passed report)))
-         (failed (length (results-with-status :failed report))))
-    (format *terminal-io* "~&
-Total:  ~9,,'':d
-Passed: ~9,,'':d (~2d%)
-Failed: ~9,,'':d (~2d%)~%"
-            total passed (round (/ passed total 1/100))
-            failed (round (/ failed total 1/100)))))
+(defun test (&optional (type 'largescale))
+  (parachute:test 'uax-9 :report type))
 
 (define-test uax-9)
 
