@@ -1,5 +1,5 @@
 ## About UAX-9
-This is an implementation of the "Unicode Standards Annex #9"(https://www.unicod.org/reports/tr9/)'s bidirectional text algorithm. It provides a convenient way to handle text bidirectionality.
+This is an implementation of the "Unicode Standards Annex #9"(https://www.unicode.org/reports/tr9/)'s bidirectional text algorithm. It provides a convenient way to handle text bidirectionality.
 
 Bidirectional text occurs when text of different directionality is mixed. For instance, if arabic text, which is typically right-to-left, intersperses roman numerals, which is typically left-to-right, then the roman numerals need to be rendered in reversed order to produce the correct display order. 
 
