@@ -4,9 +4,9 @@
   :author "Yukari Hafner <shinmera@tymoon.eu>"
   :maintainer "Yukari Hafner <shinmera@tymoon.eu>"
   :description "Test system for UAX-9."
-  :homepage "https://github.com/Shinmera/uax-9"
-  :bug-tracker "https://github.com/Shinmera/uax-9/issues"
-  :source-control (:git "https://github.com/Shinmera/uax-9.git")
+  :homepage "https://shinmera.com/project/uax-9"
+  :bug-tracker "https://shinmera.com/project/uax-9/issues"
+  :source-control (:git "https://shinmera.com/project/uax-9.git")
   :serial T
   :components ((:file "test"))
   :depends-on (:uax-9 :parachute :cl-ppcre)
